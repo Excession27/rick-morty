@@ -1,5 +1,3 @@
-import React from "react";
-
 const Card = (props: { image: string; name: string }) => {
   return (
     <div className="w-100 h-100 flex flex-col rounded-lg bg-white">

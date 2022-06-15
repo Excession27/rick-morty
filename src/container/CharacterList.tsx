@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import axiosInstance from "../httpClient/axiosInstance";
 import useDebounce from "../hooks/useDebounce";
+import AsyncComponent from "../component/hoc/AsyncComponent";
+import placeholderImg from "../assets/img/placeholder.jpeg";
 
 const CharacterList = () => {
   const [filter, setFilter] = useState<{
@@ -21,7 +23,11 @@ const CharacterList = () => {
 
   const { ref, inView } = useInView({ threshold: 0.2 });
 
-  const { data: characters, fetchNextPage } = useInfiniteQuery(
+  const {
+    data: characters,
+    status: charactersStatus,
+    fetchNextPage,
+  } = useInfiniteQuery(
     ["filter-query", filter],
     async ({ pageParam = "character" }) => {
       let datum: any;
@@ -80,8 +86,8 @@ const CharacterList = () => {
   }, 400);
 
   return (
-    <div className="w-full bg-slate-300 pb-5">
-      <div>
+    <div className="w-full bg-slate-300 py-2">
+      <div className="flex flex-wrap justify-center py-2 sm:justify-between">
         <div
           className="flex flex-wrap gap-2 py-4 px-2"
           onChange={(event: any) => {
@@ -127,6 +133,7 @@ const CharacterList = () => {
           </div>
         </div>
         <input
+          className="mr-3 rounded-lg p-3"
           type="text"
           name=""
           id=""
@@ -136,19 +143,30 @@ const CharacterList = () => {
       </div>
 
       <div className="card-container justify-content-center flex  flex-wrap justify-evenly gap-x-1 gap-y-4">
-        {characters?.pages.map((page) =>
-          page.data.results.map((character: CharacterType, index: number) => {
-            return (
-              <div ref={ref} key={index}>
-                <Card
-                  image={character.image}
-                  name={character.name}
-                  key={character.id}
-                />
-              </div>
-            );
-          })
-        )}
+        <AsyncComponent
+          component={
+            <>
+              {" "}
+              {characters?.pages.map((page) =>
+                page.data.results.map(
+                  (character: CharacterType, index: number) => {
+                    return (
+                      <div ref={ref} key={index}>
+                        <Card
+                          image={character.image}
+                          name={character.name}
+                          key={character.id}
+                        />
+                      </div>
+                    );
+                  }
+                )
+              )}
+            </>
+          }
+          status={charactersStatus}
+          skeleton={<Card image={placeholderImg} name={"No data available"} />}
+        />
       </div>
       <div></div>
     </div>

@@ -2,8 +2,7 @@ import axios from "../../httpClient/axiosInstance";
 import { APICall, CharacterStatus } from "../utils";
 import { CharacterType } from "../types";
 
-export const getAllCharacters = (page: number): APICall<any> =>
-  axios.get(`/character?page=${page}`);
+export const getAllCharacters = (): APICall<any> => axios.get(`/character`);
 
 export const getCharacters = (page: string): APICall<any> =>
   axios.get(`/character?page=${page}`);
