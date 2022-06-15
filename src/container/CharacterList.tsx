@@ -8,6 +8,11 @@ import axiosInstance from "../httpClient/axiosInstance";
 import useDebounce from "../hooks/useDebounce";
 import AsyncComponent from "../component/hoc/AsyncComponent";
 import placeholderImg from "../assets/img/placeholder.jpeg";
+import {
+  getCharactersByQuery,
+  getCharactersByStatus,
+  getCharactersByName,
+} from "../api/characters";
 
 const CharacterList = () => {
   const [filter, setFilter] = useState<{
@@ -36,11 +41,11 @@ const CharacterList = () => {
         filter.status.length > 1 &&
         pageParam.length < 10
       ) {
-        pageParam = `character/?name=${filter.name}&status=${filter.status}`;
+        return getCharactersByQuery(filter.name, filter.status);
       } else if (filter.name.length > 1 && pageParam.length < 10) {
-        pageParam = `character?name=${filter.name}`;
+        return getCharactersByName(filter.name);
       } else if (filter.status.length > 1 && pageParam.length < 10) {
-        pageParam = `character?status=${filter.status}`;
+        return getCharactersByStatus(filter.status);
       }
 
       datum = axiosInstance.get(pageParam);
@@ -146,7 +151,6 @@ const CharacterList = () => {
         <AsyncComponent
           component={
             <>
-              {" "}
               {characters?.pages.map((page) =>
                 page.data.results.map(
                   (character: CharacterType, index: number) => {
