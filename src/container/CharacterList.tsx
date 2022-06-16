@@ -38,15 +38,17 @@ const CharacterList = () => {
 
   const { ref, inView } = useInView({ threshold: 0.2 });
 
+  // Depending on the parameters supplied a different query will be returned,
+  // however after after the first run useInfiniteQuery provides a special query for the next pages thus the last IF statement
   const getQuery = (name: string, status: string, param: string) => {
-    let query = "character";
+    let query: string = "character";
+    let firstRun: boolean = param.length < 10;
 
-    if (name.length > 1 && param.length < 10) query = `character/?name=${name}`;
-    if (status.length > 1 && param.length < 10)
-      query = `character/?status=${status}`;
-    if (name.length > 1 && status.length > 1 && param.length < 10)
+    if (name.length > 1 && firstRun) query = `character/?name=${name}`;
+    if (status.length > 1 && firstRun) query = `character/?status=${status}`;
+    if (name.length > 1 && status.length > 1 && firstRun)
       query = `character/?name=${name}&status=${status}`;
-    if (param.length > 10) query = param;
+    if (!firstRun) query = param;
 
     return query;
   };
@@ -100,6 +102,7 @@ const CharacterList = () => {
     }
   );
 
+  // Check to see viewport position in order to fetch next page
   useEffect(() => {
     if (inView) {
       fetchNextPage();
@@ -114,7 +117,10 @@ const CharacterList = () => {
 
   return (
     <div className="w-full bg-slate-300 py-2">
-      <div className="flex flex-wrap justify-center py-2 sm:justify-between">
+      <div
+        id="serach-and-filter"
+        className="flex flex-wrap justify-center py-2 sm:justify-between"
+      >
         <div
           className="flex flex-wrap gap-2 py-4 px-2"
           onChange={(event: any) => {
