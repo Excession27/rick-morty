@@ -1,5 +1,5 @@
 import axios from "../../httpClient/axiosInstance";
-import { APICall, CharacterStatus } from "../utils";
+import { APICall, CharacterStatus } from "../types";
 import { CharacterType } from "../types";
 
 export const getAllCharacters = (): APICall<any> => axios.get(`/character`);

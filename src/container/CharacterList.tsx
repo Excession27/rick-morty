@@ -1,5 +1,5 @@
 import Card from "../component/Card";
-import { CharacterStatus } from "../api/utils";
+import { CharacterStatus, PageDataType } from "../api/types";
 import { CharacterType } from "../api/types";
 import { useInfiniteQuery } from "react-query";
 import { useEffect, useState } from "react";
@@ -8,11 +8,13 @@ import axiosInstance from "../httpClient/axiosInstance";
 import useDebounce from "../hooks/useDebounce";
 import AsyncComponent from "../component/hoc/AsyncComponent";
 import placeholderImg from "../assets/img/placeholder.jpeg";
-import {
-  getCharactersByQuery,
-  getCharactersByStatus,
-  getCharactersByName,
-} from "../api/characters";
+
+//  for alternative API implementation
+// import {
+//   getCharactersByQuery,
+//   getCharactersByStatus,
+//   getCharactersByName,
+// } from "../api/characters";
 
 const CharacterList = () => {
   const [filter, setFilter] = useState<{
@@ -24,31 +26,56 @@ const CharacterList = () => {
     status: "",
     page: 0,
   });
+
+  const setFilterStatus = (value: string) => {
+    setFilter((prev) => ({ ...prev, status: value }));
+  };
+  const setFilterName = (value: string) => {
+    setFilter((prev) => ({ ...prev, name: value }));
+  };
+
   const [search, setSearch] = useState<string>("");
 
   const { ref, inView } = useInView({ threshold: 0.2 });
 
+  const getQuery = (name: string, status: string, param: string) => {
+    let query = "character";
+
+    if (name.length > 1 && param.length < 10) query = `character/?name=${name}`;
+    if (status.length > 1 && param.length < 10)
+      query = `character/?status=${status}`;
+    if (name.length > 1 && status.length > 1 && param.length < 10)
+      query = `character/?name=${name}&status=${status}`;
+    if (param.length > 10) query = param;
+
+    return query;
+  };
+
   const {
-    data: characters,
+    data: characterPages,
     status: charactersStatus,
     fetchNextPage,
-  } = useInfiniteQuery(
+  } = useInfiniteQuery<PageDataType>(
     ["filter-query", filter],
     async ({ pageParam = "character" }) => {
       let datum: any;
-      if (
-        filter.name.length > 1 &&
-        filter.status.length > 1 &&
-        pageParam.length < 10
-      ) {
-        return getCharactersByQuery(filter.name, filter.status);
-      } else if (filter.name.length > 1 && pageParam.length < 10) {
-        return getCharactersByName(filter.name);
-      } else if (filter.status.length > 1 && pageParam.length < 10) {
-        return getCharactersByStatus(filter.status);
-      }
 
-      datum = axiosInstance.get(pageParam);
+      //    # Alternative implementation
+      // if (
+      //   filter.name.length > 1 &&
+      //   filter.status.length > 1 &&
+      //   pageParam.length < 10
+      // ) {
+      //   return getCharactersByQuery(filter.name, filter.status);
+      // } else if (filter.name.length > 1 && pageParam.length < 10) {
+      //   return getCharactersByName(filter.name);
+      // } else if (filter.status.length > 1 && pageParam.length < 10) {
+      //   return getCharactersByStatus(filter.status);
+      // }
+
+      datum = axiosInstance.get(
+        getQuery(filter.name, filter.status, pageParam)
+      );
 
       return datum;
     },
@@ -79,16 +106,11 @@ const CharacterList = () => {
     }
   }, [inView, fetchNextPage]);
 
-  const setFilterStatus = (value: string) => {
-    setFilter((prev) => ({ ...prev, status: value }));
-  };
-  const setFilterName = (value: string) => {
-    setFilter((prev) => ({ ...prev, name: value }));
-  };
+  const debouncedSearch = useDebounce(search, 400);
 
-  useDebounce(() => {
-    setFilterName(search);
-  }, 400);
+  useEffect(() => {
+    setFilterName(debouncedSearch);
+  }, [debouncedSearch]);
 
   return (
     <div className="w-full bg-slate-300 py-2">
@@ -151,7 +173,7 @@ const CharacterList = () => {
         <AsyncComponent
           component={
             <>
-              {characters?.pages.map((page) =>
+              {characterPages?.pages.map((page) =>
                 page.data.results.map(
                   (character: CharacterType, index: number) => {
                     return (
